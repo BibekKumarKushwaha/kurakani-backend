@@ -1,3 +1,5 @@
+
+
 // import { compare } from "bcrypt";
 // import { NEW_REQUEST, REFETCH_CHATS } from "../constants/events.js";
 // import { getOtherMember } from "../lib/helper.js";
@@ -12,14 +14,29 @@
 //   uploadFilesToCloudinary,
 // } from "../utils/features.js";
 // import { ErrorHandler } from "../utils/utility.js";
+// //import sendOtp from "../service/sendOtp.js";
 
 // // Create a new user and save it to the database and save token in cookie
 // const newUser = TryCatch(async (req, res, next) => {
-//   const { name, username, password, bio } = req.body;
+//   const { name, username, password, bio, phoneNumber } = req.body;
 
 //   const file = req.file;
 
+//   // Check for required fields
 //   if (!file) return next(new ErrorHandler("Please Upload Avatar"));
+//   if (!phoneNumber) return next(new ErrorHandler("Phone number is required"));
+
+//   // Validate phone number format (e.g., 10-15 digits)
+//   const phoneRegex = /^[0-9]{10}$/;
+//   if (!phoneRegex.test(phoneNumber)) {
+//     return next(new ErrorHandler("Invalid phone number format"));
+//   }
+
+//   // Check if phone number already exists
+//   const existingUser = await User.findOne({ phoneNumber });
+//   if (existingUser) {
+//     return next(new ErrorHandler("Phone number already in use"));
+//   }
 
 //   const result = await uploadFilesToCloudinary([file]);
 
@@ -34,6 +51,7 @@
 //     username,
 //     password,
 //     avatar,
+//     phoneNumber, // Add phone number to user creation
 //   });
 
 //   sendToken(res, user, 201, "User created");
@@ -229,6 +247,155 @@
 //   }
 // });
 
+
+
+// const updateProfile = TryCatch(async (req, res, next) => {
+//   const { name, bio, username, phoneNumber } = req.body;
+
+//   const user = await User.findById(req.user);
+
+//   if (!user) return next(new ErrorHandler("User not found", 404));
+
+//   // Check if the username or phone number is already in use by another user
+//   const existingUserByUsername = await User.findOne({ username });
+//   if (existingUserByUsername && existingUserByUsername._id.toString() !== user._id.toString()) {
+//     return next(new ErrorHandler("Username is already taken", 400));
+//   }
+
+//   const existingUserByPhone = await User.findOne({ phoneNumber });
+//   if (existingUserByPhone && existingUserByPhone._id.toString() !== user._id.toString()) {
+//     return next(new ErrorHandler("Phone number is already in use", 400));
+//   }
+
+//   // Update user fields
+//   user.name = name || user.name;
+//   user.bio = bio || user.bio;
+//   user.username = username || user.username;
+//   user.phoneNumber = phoneNumber || user.phoneNumber;
+
+//   // Update avatar if a new one is uploaded
+//   if (req.file) {
+//     const file = req.file;
+
+//     // Upload file to Cloudinary
+//     const result = await uploadFilesToCloudinary([file]);
+
+//     // Save avatar data in the user model
+//     user.avatar = {
+//       public_id: result[0].public_id,
+//       url: result[0].url,
+//     };
+//   }
+
+//   // Save updated user data
+//   await user.save();
+
+//   res.status(200).json({
+//     success: true,
+//     message: "Profile updated successfully",
+//     user,
+//   });
+// });
+// const forgotPassword = async (req, res) => {
+//   console.log(req.body);
+ 
+//   const { phoneNumber } = req.body;
+ 
+//   if (!phoneNumber) {
+//     return res.status(400).json({
+//       success: false,
+//       message: "Please enter your phone number",
+//     });
+//   }
+//   try {
+//     const user = await userModel.findOne({ phoneNumber: phoneNumber });
+//     if (!user) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "User not found",
+//       });
+//     }
+//     // Generate OTP
+//     const randomOTP = Math.floor(100000 + Math.random() * 900000);
+//     console.log(randomOTP);
+ 
+//     user.resetPasswordOTP = randomOTP;
+//     user.resetPasswordExpires = Date.now() + 600000; // 10 minutes
+//     await user.save();
+ 
+//     // Send OTP to user phone number
+//     const isSent = await sendOtp(phoneNumber, randomOTP);
+ 
+//     if (!isSent) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Error in sending OTP",
+//       });
+//     }
+ 
+//     res.status(200).json({
+//       success: true,
+//       message: "OTP sent to your phone number",
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).json({
+//       success: false,
+//       message: "Internal server error",
+//     });
+//   }
+// };
+
+// //verify otp and change password
+// const verifyOtpAndSetPassword = async (req, res) => {
+//   //get data
+//   const { phoneNumber, otp, newPassword } = req.body;
+//   if (!phoneNumber || !otp || !newPassword) {
+//       return res.status(400).json({
+//           'success': false,
+//           'message': 'required fields are missing!'
+//       });
+//   }
+//   try {
+//       const user = await userModel.findOne({ phoneNumber: phoneNumber });
+
+//       //verify otp
+//       if (user.resetPasswordOTP != otp) {
+//           return res.status(400).json({
+//               'success': false,
+//               'message': 'invalid otp!!'
+//           });
+//       }
+//       if (user.resetPasswordExpires < Date.now()) {
+//           return res.status(400).json({
+//               'success': false,
+//               'message': 'OTP Expired!'
+//           });
+//       }
+//       //password hash
+//       const randomSalt = await bcrypt.genSalt(10);
+//       const hashedPassword = await bcrypt.hash(newPassword, randomSalt);
+
+//       //update password
+//       user.password = hashedPassword;
+//       await user.save();
+
+//       //response
+//       res.status(200).json({
+//           'success': true,
+//           'message': 'OTP verified and password updated!'
+//       });
+
+//   } catch (error) {
+//       console.log(error);
+//       return res.status(500).json({
+//           'success': false,
+//           'message': 'server error!'
+//       });
+//   }
+// };
+
+
 // export {
 //   acceptFriendRequest,
 //   getMyFriends,
@@ -239,7 +406,12 @@
 //   newUser,
 //   searchUser,
 //   sendFriendRequest,
+//   updateProfile,
+//   forgotPassword,
+//   verifyOtpAndSetPassword,
 // };
+
+
 
 import { compare } from "bcrypt";
 import { NEW_REQUEST, REFETCH_CHATS } from "../constants/events.js";
@@ -255,28 +427,15 @@ import {
   uploadFilesToCloudinary,
 } from "../utils/features.js";
 import { ErrorHandler } from "../utils/utility.js";
+import { sendOtp } from "../service/sendOtp.js";
 
 // Create a new user and save it to the database and save token in cookie
 const newUser = TryCatch(async (req, res, next) => {
-  const { name, username, password, bio, phoneNumber } = req.body;
+  const { name, username, password, bio } = req.body;
 
   const file = req.file;
 
-  // Check for required fields
   if (!file) return next(new ErrorHandler("Please Upload Avatar"));
-  if (!phoneNumber) return next(new ErrorHandler("Phone number is required"));
-
-  // Validate phone number format (e.g., 10-15 digits)
-  const phoneRegex = /^[0-9]{10}$/;
-  if (!phoneRegex.test(phoneNumber)) {
-    return next(new ErrorHandler("Invalid phone number format"));
-  }
-
-  // Check if phone number already exists
-  const existingUser = await User.findOne({ phoneNumber });
-  if (existingUser) {
-    return next(new ErrorHandler("Phone number already in use"));
-  }
 
   const result = await uploadFilesToCloudinary([file]);
 
@@ -291,7 +450,6 @@ const newUser = TryCatch(async (req, res, next) => {
     username,
     password,
     avatar,
-    phoneNumber, // Add phone number to user creation
   });
 
   sendToken(res, user, 201, "User created");
@@ -486,7 +644,152 @@ const getMyFriends = TryCatch(async (req, res) => {
     });
   }
 });
+const updateProfile = TryCatch(async (req, res, next) => {
+  const { name, bio, username, phoneNumber } = req.body;
 
+  const user = await User.findById(req.user);
+
+  if (!user) return next(new ErrorHandler("User not found", 404));
+
+  // Check if the username or phone number is already in use by another user
+  const existingUserByUsername = await User.findOne({ username });
+  if (existingUserByUsername && existingUserByUsername._id.toString() !== user._id.toString()) {
+    return next(new ErrorHandler("Username is already taken", 400));
+  }
+
+  const existingUserByPhone = await User.findOne({ phoneNumber });
+  if (existingUserByPhone && existingUserByPhone._id.toString() !== user._id.toString()) {
+    return next(new ErrorHandler("Phone number is already in use", 400));
+  }
+
+  // Update user fields
+  user.name = name || user.name;
+  user.bio = bio || user.bio;
+  user.username = username || user.username;
+  user.phoneNumber = phoneNumber || user.phoneNumber;
+
+  // Update avatar if a new one is uploaded
+  if (req.file) {
+    const file = req.file;
+
+    // Upload file to Cloudinary
+    const result = await uploadFilesToCloudinary([file]);
+
+    // Save avatar data in the user model
+    user.avatar = {
+      public_id: result[0].public_id,
+      url: result[0].url,
+    };
+  }
+
+  // Save updated user data
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Profile updated successfully",
+    user,
+  });
+});
+
+const forgotPassword = async (req, res) => {
+  console.log(req.body);
+ 
+  const { phoneNumber } = req.body;
+ 
+  if (!phoneNumber) {
+    return res.status(400).json({
+      success: false,
+      message: "Please enter your phone number",
+    });
+  }
+  try {
+    const user = await userModel.findOne({ phoneNumber: phoneNumber });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    // Generate OTP
+    const randomOTP = Math.floor(100000 + Math.random() * 900000);
+    console.log(randomOTP);
+ 
+    user.resetPasswordOTP = randomOTP;
+    user.resetPasswordExpires = Date.now() + 600000; // 10 minutes
+    await user.save();
+ 
+    // Send OTP to user phone number
+    const isSent = await sendOtp(phoneNumber, randomOTP);
+ 
+    if (!isSent) {
+      return res.status(400).json({
+        success: false,
+        message: "Error in sending OTP",
+      });
+    }
+ 
+    res.status(200).json({
+      success: true,
+      message: "OTP sent to your phone number",
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+//verify otp and change password
+const verifyOtpAndSetPassword = async (req, res) => {
+  //get data
+  const { phoneNumber, otp, newPassword } = req.body;
+  if (!phoneNumber || !otp || !newPassword) {
+      return res.status(400).json({
+          'success': false,
+          'message': 'required fields are missing!'
+      });
+  }
+  try {
+      const user = await userModel.findOne({ phoneNumber: phoneNumber });
+
+      //verify otp
+      if (user.resetPasswordOTP != otp) {
+          return res.status(400).json({
+              'success': false,
+              'message': 'invalid otp!!'
+          });
+      }
+      if (user.resetPasswordExpires < Date.now()) {
+          return res.status(400).json({
+              'success': false,
+              'message': 'OTP Expired!'
+          });
+      }
+      //password hash
+      const randomSalt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, randomSalt);
+
+      //update password
+      user.password = hashedPassword;
+      await user.save();
+
+      //response
+      res.status(200).json({
+          'success': true,
+          'message': 'OTP verified and password updated!'
+      });
+
+  } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+          'success': false,
+          'message': 'server error!'
+      });
+  }
+};
 export {
   acceptFriendRequest,
   getMyFriends,
@@ -497,4 +800,7 @@ export {
   newUser,
   searchUser,
   sendFriendRequest,
+  updateProfile,
+  forgotPassword,
+  verifyOtpAndSetPassword,
 };
