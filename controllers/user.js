@@ -431,7 +431,7 @@ import { sendOtp } from "../service/sendOtp.js";
 
 // Create a new user and save it to the database and save token in cookie
 const newUser = TryCatch(async (req, res, next) => {
-  const { name, username, password, bio } = req.body;
+  const { name, username, password, bio,phoneNumber } = req.body;
 
   const file = req.file;
 
@@ -450,6 +450,7 @@ const newUser = TryCatch(async (req, res, next) => {
     username,
     password,
     avatar,
+    phoneNumber,
   });
 
   sendToken(res, user, 201, "User created");
