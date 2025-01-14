@@ -430,8 +430,39 @@ import { ErrorHandler } from "../utils/utility.js";
 import { sendOtp } from "../service/sendOtp.js";
 
 // Create a new user and save it to the database and save token in cookie
+// const newUser = TryCatch(async (req, res, next) => {
+//   const { name, username, password, bio,phoneNumber } = req.body;
+
+//   const file = req.file;
+
+//   if (!file) return next(new ErrorHandler("Please Upload Avatar"));
+
+//   const result = await uploadFilesToCloudinary([file]);
+
+//   const avatar = {
+//     public_id: result[0].public_id,
+//     url: result[0].url,
+//   };
+
+//   const user = await User.create({
+//     name,
+//     bio,
+//     username,
+//     password,
+//     avatar,
+//     phoneNumber,
+//   });
+
+//   sendToken(res, user, 201, "User created");
+// });
+
 const newUser = TryCatch(async (req, res, next) => {
-  const { name, username, password, bio,phoneNumber } = req.body;
+  const { name, username, password, bio, phoneNumber } = req.body;
+
+  // Validate phone number on the backend, ensuring 10 digits only
+  if (!/^\d{10}$/.test(phoneNumber)) {
+    return next(new ErrorHandler("Please provide a valid 10-digit phone number"));
+  }
 
   const file = req.file;
 
@@ -455,6 +486,7 @@ const newUser = TryCatch(async (req, res, next) => {
 
   sendToken(res, user, 201, "User created");
 });
+
 
 // Login user and save token in cookie
 const login = TryCatch(async (req, res, next) => {
