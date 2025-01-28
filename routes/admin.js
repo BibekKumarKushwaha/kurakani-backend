@@ -19,6 +19,7 @@ app.get("/logout", adminLogout);
 app.get("/users", allUsers);
 app.get("/chats", allChats);
 app.get("/messages", allMessages);
+app.get("/users/:id", allUsers);
 
 app.get("/stats", getDashboardStats);
 

@@ -39,17 +39,30 @@ const schema = new Schema(
       required: true,
       unique: true,
     },
+    resetPasswordOTP:{
+      type: Number,
+
+    },
+    resetPasswordExpires: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-schema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+// schema.pre("save", async function (next) {
+//   if (!this.isModified("password")) return next();
 
-  this.password = await hash(this.password, 10);
+//   this.password = await hash(this.password, 10);
+// });
+schema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next(); // Skip if not modified
+  this.password = await hash(this.password, 10); // Hash password only if modified
+  next();
 });
+
 
 export const User = mongoose.models.User || model("User", schema);
 

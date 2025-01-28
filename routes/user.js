@@ -69,6 +69,109 @@
 
 // export default app;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import express from "express";
+// import {
+//   acceptFriendRequest,
+//   forgotPassword,
+//   getMyFriends,
+//   getMyNotifications,
+//   getMyProfile,
+//   login,
+//   logout,
+//   newUser,
+//   searchUser,
+//   sendFriendRequest,
+//   updateProfile,
+//   verifyOtpAndSetPassword,
+// } from "../controllers/user.js";
+// import {
+//   acceptRequestValidator,
+//   loginValidator,
+//   registerValidator,
+//   sendRequestValidator,
+//   validateHandler,
+// } from "../lib/validators.js";
+// import { isAuthenticated } from "../middlewares/auth.js";
+// import { singleAvatar } from "../middlewares/multer.js";
+
+// const app = express.Router();
+
+// app.post("/new", singleAvatar, registerValidator(), validateHandler, newUser);
+// app.post("/login", loginValidator(), validateHandler, login);
+
+// // // // Forgot Password (Request OTP)
+// app.post("/forgot_password", forgotPassword);
+
+// // // // Verify OTP and Set New Password
+// app.post("/verify_otp", verifyOtpAndSetPassword);
+
+
+// // After here user must be logged in to access the routes
+
+// app.use(isAuthenticated);
+
+// app.get("/me", getMyProfile);
+
+// app.get("/logout", logout);
+
+// app.get("/search", searchUser);
+
+// app.put(
+//   "/sendrequest",
+//   sendRequestValidator(),
+//   validateHandler,
+//   sendFriendRequest
+// );
+
+// app.put(
+//   "/acceptrequest",
+//   acceptRequestValidator(),
+//   validateHandler,
+//   acceptFriendRequest
+// );
+
+// app.get("/notifications", getMyNotifications);
+
+// app.get("/friends", getMyFriends);
+
+// // Update User Profile
+// app.put("/me", singleAvatar, updateProfile);
+
+// export default app;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import express from "express";
 import {
   acceptFriendRequest,
@@ -96,24 +199,20 @@ import { singleAvatar } from "../middlewares/multer.js";
 
 const app = express.Router();
 
+// Public Routes (No Authentication Required)
 app.post("/new", singleAvatar, registerValidator(), validateHandler, newUser);
 app.post("/login", loginValidator(), validateHandler, login);
 
-// // // Forgot Password (Request OTP)
-app.post("/forgot-password", forgotPassword);
+// Forgot Password and OTP Verification (No Authentication Required)
+app.post("/forgot_password", forgotPassword);
+app.post("/verify_otp", verifyOtpAndSetPassword);
 
-// // // Verify OTP and Set New Password
-app.post("/verify-otp", verifyOtpAndSetPassword);
-
-
-// After here user must be logged in to access the routes
-
+// Apply Authentication Middleware for Routes Below
 app.use(isAuthenticated);
 
+// Protected Routes (Require Authentication)
 app.get("/me", getMyProfile);
-
 app.get("/logout", logout);
-
 app.get("/search", searchUser);
 
 app.put(
@@ -131,7 +230,6 @@ app.put(
 );
 
 app.get("/notifications", getMyNotifications);
-
 app.get("/friends", getMyFriends);
 
 // Update User Profile
